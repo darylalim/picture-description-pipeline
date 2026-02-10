@@ -1,0 +1,15 @@
+[project]
+name = "picture-description-pipeline"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "docling[vlm]",
+    "streamlit",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+    "ty",
+]

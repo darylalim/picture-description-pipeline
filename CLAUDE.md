@@ -39,15 +39,14 @@ Dev (in `[dependency-groups] dev`):
 
 ## Architecture
 
-`streamlit_app.py` — single-file app. Users upload a PDF, the app converts it with Docling, runs picture description inference, and outputs annotated results as downloadable JSON.
+- `src/pipeline/config.py` — constants (`MAX_PAGES`, `MAX_FILE_SIZE_BYTES`) and `create_converter()` factory. Builds a `DocumentConverter` with picture description enabled via `granite_picture_description`.
+- `src/pipeline/output.py` — `build_output()` pure function. Builds the output dict from a `DoclingDocument` and duration.
+- `streamlit_app.py` — UI-only. Imports from `pipeline`, applies `@st.cache_resource`, handles file upload, conversion, and download.
 
-- `create_converter()` — cached `DocumentConverter` with picture description enabled via `granite_picture_description`. Limits: `MAX_PAGES=100`, `MAX_FILE_SIZE_BYTES=20MB`.
-- `convert()` — converts a PDF file path to a `DoclingDocument`.
-- `build_output()` — builds the output dict from a `DoclingDocument` and duration. Extracted for testability.
-- **UI flow** — file upload → "Annotate" button → spinner → metrics (picture count, duration in seconds) → JSON download. Catches `ConversionError`. Temp file cleanup in `finally` block.
+**UI flow** — file upload → "Annotate" button → spinner → metrics (picture count, duration in seconds) → JSON download. Catches `ConversionError`. Temp file cleanup in `finally` block.
 
 Output JSON contains `document_info` (count + timing) and a `pictures` array with each picture's reference, caption, and `description` (text + created_by) from `pic.meta.description`.
 
 ## Tests
 
-`tests/test_output.py` — unit tests for `build_output()` using real Docling objects. Mocks `streamlit` in `sys.modules` to allow importing without the Streamlit runtime.
+`tests/test_output.py` — unit tests for `build_output()` using real Docling objects. Imports directly from `pipeline.output` — no Streamlit mocking needed.

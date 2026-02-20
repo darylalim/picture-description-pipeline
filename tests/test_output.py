@@ -1,6 +1,5 @@
 """Tests for the build_output function."""
 
-import pytest
 from docling_core.types.doc.document import (
     DescriptionMetaField,
     DoclingDocument,

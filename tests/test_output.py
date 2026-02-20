@@ -1,8 +1,5 @@
 """Tests for the build_output function."""
 
-import sys
-from unittest.mock import MagicMock
-
 import pytest
 from docling_core.types.doc.document import (
     DescriptionMetaField,
@@ -11,14 +8,7 @@ from docling_core.types.doc.document import (
     PictureMeta,
 )
 
-
-@pytest.fixture(autouse=True)
-def _mock_streamlit(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Prevent Streamlit from running during import."""
-    mock_st = MagicMock()
-    mock_st.cache_resource = lambda f: f
-    mock_st.button.return_value = False
-    monkeypatch.setitem(sys.modules, "streamlit", mock_st)
+from pipeline.output import build_output
 
 
 def _make_doc(pictures: list[PictureItem] | None = None) -> DoclingDocument:
@@ -47,16 +37,12 @@ def _make_picture(
 
 
 def test_top_level_keys() -> None:
-    from streamlit_app import build_output
-
     doc = _make_doc()
     result = build_output(doc, 1.5)
     assert set(result.keys()) == {"document_info", "pictures"}
 
 
 def test_document_info_fields() -> None:
-    from streamlit_app import build_output
-
     doc = _make_doc([_make_picture(0)])
     result = build_output(doc, 2.34)
     info = result["document_info"]
@@ -66,8 +52,6 @@ def test_document_info_fields() -> None:
 
 
 def test_picture_entry_structure() -> None:
-    from streamlit_app import build_output
-
     pic = _make_picture(0, text="A test description.", created_by="test-model")
     doc = _make_doc([pic])
     result = build_output(doc, 0.5)
@@ -82,8 +66,6 @@ def test_picture_entry_structure() -> None:
 
 
 def test_description_fields() -> None:
-    from streamlit_app import build_output
-
     pic = _make_picture(0, text="Describes an image.", created_by="granite-vision")
     doc = _make_doc([pic])
     result = build_output(doc, 1.0)
@@ -93,8 +75,6 @@ def test_description_fields() -> None:
 
 
 def test_multiple_pictures() -> None:
-    from streamlit_app import build_output
-
     pics = [
         _make_picture(0, text="First pic.", created_by="model-a"),
         _make_picture(1, text="Second pic.", created_by="model-b"),
@@ -110,8 +90,6 @@ def test_multiple_pictures() -> None:
 
 
 def test_no_description() -> None:
-    from streamlit_app import build_output
-
     pic = _make_picture(0)
     doc = _make_doc([pic])
     result = build_output(doc, 0.5)
@@ -119,8 +97,6 @@ def test_no_description() -> None:
 
 
 def test_empty_document() -> None:
-    from streamlit_app import build_output
-
     doc = _make_doc()
     result = build_output(doc, 0.0)
     assert result["document_info"]["num_pictures"] == 0

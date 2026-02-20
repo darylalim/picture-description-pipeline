@@ -37,20 +37,25 @@ Dev (`[dependency-groups] dev`):
 - `ruff` — linting and formatting
 - `ty` — type checking
 
+Overrides (`[tool.uv]`):
+- `opencv-python` replaced with `opencv-python-headless` to avoid duplicate `libavdevice` dylib conflicts with `av` on macOS
+
 ## Architecture
 
-- `src/pipeline/__init__.py` — re-exports public API (`convert`, `create_converter`, `build_output`, constants)
-- `src/pipeline/config.py` — constants (`MAX_PAGES`, `MAX_FILE_SIZE_BYTES`), `create_converter()` factory, and `convert()` wrapper
-- `src/pipeline/output.py` — `build_output()` pure function; builds output dict from a `DoclingDocument` and duration
-- `streamlit_app.py` — UI only; imports from `pipeline`, applies `st.cache_resource`, handles file upload and download
+- `pipeline/__init__.py` — re-exports public API (`convert`, `create_converter`, `build_output`, constants)
+- `pipeline/config.py` — constants (`MAX_PAGES`, `MAX_FILE_SIZE_BYTES`), `create_converter()` factory, `convert()` wrapper, warning filters for upstream docling/transformers deprecations
+- `pipeline/output.py` — `build_output()` pure function that builds output dict from a `DoclingDocument` and duration; `_get_description()` reads from `pic.meta.description` with fallback to `pic.annotations`
+- `streamlit_app.py` — UI only; caches the converter via `st.cache_resource`, passes it to `convert()`, handles file upload and download
 
-Upload → "Annotate" button → spinner → metrics (picture count, duration) → JSON download. Catches `ConversionError`. Temp file cleanup in `finally` block.
-
-Output JSON contains `document_info` (count, timing) and a `pictures` array with each picture's reference, caption, and description.
+Key details:
+- `convert()` accepts an optional `converter` parameter to reuse a cached instance, avoiding model reload on each call
+- `_get_description()` falls back to `pic.annotations` because docling appends `DescriptionAnnotation` after `PictureItem` construction, so the `meta` migration validator doesn't run
+- Upload flow: upload PDF, click "Annotate", spinner, metrics (picture count, duration), JSON download
+- Output JSON contains `document_info` (count, timing) and a `pictures` array (reference, caption, description)
 
 ## Tests
 
-- `tests/test_config.py` — constants and `create_converter()` factory
-- `tests/test_output.py` — `build_output()` with real Docling objects
+- `tests/test_config.py` — constants, `create_converter()` factory, `convert()` with and without provided converter
+- `tests/test_output.py` — `build_output()` with real Docling objects, annotations fallback, meta priority over annotations
 
 All tests import directly from `pipeline` — no Streamlit mocking needed.

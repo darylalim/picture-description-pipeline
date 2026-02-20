@@ -12,11 +12,12 @@ uv run streamlit run streamlit_app.py
 ## Project Structure
 
 ```
-src/pipeline/
-  config.py          # constants and converter factory
+pipeline/
+  __init__.py        # public API re-exports
+  config.py          # constants, converter factory, convert wrapper
   output.py          # output builder
 streamlit_app.py     # Streamlit UI
 tests/
-  test_config.py     # config tests
-  test_output.py     # output tests
+  test_config.py     # config and convert tests
+  test_output.py     # output builder tests
 ```

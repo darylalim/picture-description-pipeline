@@ -1,6 +1,9 @@
 """Tests for the build_output function."""
 
+import warnings
+
 from docling_core.types.doc.document import (
+    DescriptionAnnotation,
     DescriptionMetaField,
     DoclingDocument,
     PictureItem,
@@ -33,6 +36,21 @@ def _make_picture(
         self_ref=f"#/pictures/{index}",
         meta=meta,
     )
+
+
+def _make_picture_with_annotation(
+    index: int,
+    text: str,
+    provenance: str,
+) -> PictureItem:
+    """Create a PictureItem with a description in annotations (no meta)."""
+    pic = PictureItem(self_ref=f"#/pictures/{index}")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        pic.annotations.append(
+            DescriptionAnnotation(text=text, provenance=provenance)
+        )
+    return pic
 
 
 def test_top_level_keys() -> None:
@@ -100,3 +118,27 @@ def test_empty_document() -> None:
     result = build_output(doc, 0.0)
     assert result["document_info"]["num_pictures"] == 0
     assert result["pictures"] == []
+
+
+def test_description_from_annotations_fallback() -> None:
+    pic = _make_picture_with_annotation(0, text="A chart.", provenance="granite-vision")
+    doc = _make_doc([pic])
+    result = build_output(doc, 1.0)
+    description = result["pictures"][0]["description"]
+    assert description is not None
+    assert description["text"] == "A chart."
+    assert description["created_by"] == "granite-vision"
+
+
+def test_meta_description_preferred_over_annotations() -> None:
+    pic = _make_picture(0, text="From meta.", created_by="meta-model")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        pic.annotations.append(
+            DescriptionAnnotation(text="From annotations.", provenance="ann-model")
+        )
+    doc = _make_doc([pic])
+    result = build_output(doc, 1.0)
+    description = result["pictures"][0]["description"]
+    assert description["text"] == "From meta."
+    assert description["created_by"] == "meta-model"

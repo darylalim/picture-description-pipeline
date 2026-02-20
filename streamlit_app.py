@@ -29,7 +29,7 @@ if st.button("Annotate", type="primary"):
                     tmp_path = tmp_file.name
 
                 start = time.perf_counter_ns()
-                doc = convert(tmp_path)
+                doc = convert(tmp_path, converter=converter())
                 duration_s = (time.perf_counter_ns() - start) / 1e9
 
             st.success("Done.")

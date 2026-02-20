@@ -4,6 +4,7 @@ from docling.datamodel.pipeline_options import (
     granite_picture_description,
 )
 from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling_core.types.doc.document import DoclingDocument
 
 MAX_PAGES: int = 100
 MAX_FILE_SIZE_BYTES: int = 20 * 1024 * 1024
@@ -31,4 +32,17 @@ def create_converter() -> DocumentConverter:
         format_options={
             InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
         }
+    )
+
+
+def convert(source: str) -> DoclingDocument:
+    """Convert a PDF file to a DoclingDocument."""
+    return (
+        create_converter()
+        .convert(
+            source=source,
+            max_num_pages=MAX_PAGES,
+            max_file_size=MAX_FILE_SIZE_BYTES,
+        )
+        .document
     )

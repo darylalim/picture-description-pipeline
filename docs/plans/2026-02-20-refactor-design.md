@@ -35,8 +35,8 @@ picture-description-pipeline/
 
 - UI-only code. Imports from `pipeline`.
 - `@st.cache_resource` wraps the imported `create_converter` at this layer.
-- Inlines the `convert()` one-liner — calls `converter.convert(...).document` directly.
-- Uses `SpooledTemporaryFile` (5MB threshold) instead of `NamedTemporaryFile` to avoid disk I/O for small PDFs.
+- Calls `convert()` from `pipeline.config` which wraps `converter.convert(...)` with limit args.
+- Uses `NamedTemporaryFile(delete=False)` for temp files. (`SpooledTemporaryFile` was attempted but reverted — Docling requires a filesystem path, which `SpooledTemporaryFile.name` cannot provide.)
 
 ## Test Changes
 

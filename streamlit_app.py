@@ -6,8 +6,7 @@ from pathlib import Path
 import streamlit as st
 from docling.exceptions import ConversionError
 
-from pipeline.config import MAX_FILE_SIZE_BYTES, MAX_PAGES, create_converter
-from pipeline.output import build_output
+from pipeline import build_output, convert, create_converter
 
 converter = st.cache_resource(create_converter)
 
@@ -30,15 +29,7 @@ if st.button("Annotate", type="primary"):
                     tmp_path = tmp_file.name
 
                 start = time.perf_counter_ns()
-                doc = (
-                    converter()
-                    .convert(
-                        source=tmp_path,
-                        max_num_pages=MAX_PAGES,
-                        max_file_size=MAX_FILE_SIZE_BYTES,
-                    )
-                    .document
-                )
+                doc = convert(tmp_path)
                 duration_s = (time.perf_counter_ns() - start) / 1e9
 
             st.success("Done.")

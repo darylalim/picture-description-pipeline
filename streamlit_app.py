@@ -23,8 +23,8 @@ if st.button("Annotate", type="primary"):
         tmp_path: str | None = None
         try:
             with st.spinner("Annotating..."):
-                with tempfile.SpooledTemporaryFile(
-                    max_size=5 * 1024 * 1024, suffix=".pdf"
+                with tempfile.NamedTemporaryFile(
+                    delete=False, suffix=".pdf"
                 ) as tmp_file:
                     tmp_file.write(uploaded_file.read())
                     tmp_path = tmp_file.name

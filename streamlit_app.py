@@ -6,7 +6,7 @@ from pathlib import Path
 import streamlit as st
 from docling.exceptions import ConversionError
 
-from pipeline import build_output, convert, create_converter
+from pipeline import build_output, convert, create_converter, get_description
 
 converter = st.cache_resource(create_converter)
 
@@ -42,6 +42,21 @@ if st.button("Annotate", type="primary", disabled=not uploaded_file):
             file_name=f"{uploaded_file.name}_annotations.json",
             mime="application/json",
         )
+
+        for idx, pic in enumerate(doc.pictures, 1):
+            with st.expander(f"Picture {idx}", expanded=idx == 1):
+                col_img, col_desc = st.columns(2)
+                image = pic.get_image(doc)
+                if image:
+                    col_img.image(image)
+                caption = pic.caption_text(doc=doc)
+                if caption:
+                    col_img.caption(caption)
+                desc = get_description(pic)
+                if desc:
+                    col_desc.markdown(desc["text"])
+                else:
+                    col_desc.write("No description available.")
 
     except ConversionError as e:
         st.error(str(e))

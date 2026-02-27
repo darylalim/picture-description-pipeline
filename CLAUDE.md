@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Streamlit web app that describes pictures in PDF documents using a local vision language model: [IBM Granite Vision 3.3 2B](https://huggingface.co/ibm-granite/granite-vision-3.3-2b).
+Streamlit web app that describes pictures in PDF documents using a local vision language model: [Qwen2.5-VL-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct).
 
 ## Setup
 
@@ -42,14 +42,14 @@ Overrides (`[tool.uv]`):
 
 ## Architecture
 
-- `pipeline/__init__.py` — re-exports public API (`convert`, `create_converter`, `build_output`, constants)
+- `pipeline/__init__.py` — re-exports public API (`convert`, `create_converter`, `build_output`, `get_description`)
 - `pipeline/config.py` — constants (`MAX_PAGES`, `MAX_FILE_SIZE_BYTES`), `create_converter()` factory, `convert()` wrapper, warning filters for upstream docling/transformers deprecations
-- `pipeline/output.py` — `build_output()` pure function that builds output dict from a `DoclingDocument` and duration; `_get_description()` reads from `pic.meta.description` with fallback to `pic.annotations`
+- `pipeline/output.py` — `build_output()` pure function that builds output dict from a `DoclingDocument` and duration; `get_description()` reads from `pic.meta.description` with fallback to `pic.annotations`
 - `streamlit_app.py` — UI only; caches the converter via `st.cache_resource`, passes it to `convert()`, handles file upload and download
 
 Key details:
 - `convert()` accepts an optional `converter` parameter to reuse a cached instance, avoiding model reload on each call
-- `_get_description()` falls back to `pic.annotations` because docling appends `DescriptionAnnotation` after `PictureItem` construction, so the `meta` migration validator doesn't run
+- `get_description()` falls back to `pic.annotations` because docling appends `DescriptionAnnotation` after `PictureItem` construction, so the `meta` migration validator doesn't run
 - Upload flow: upload PDF, click "Annotate", spinner, metrics (picture count, duration), JSON download
 - Output JSON contains `document_info` (count, timing) and a `pictures` array (reference, caption, description)
 

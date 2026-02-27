@@ -7,7 +7,7 @@ from docling_core.types.doc.document import (
 )
 
 
-def _get_description(pic: PictureItem) -> dict[str, str] | None:
+def get_description(pic: PictureItem) -> dict[str, str] | None:
     """Extract description from meta or annotations fallback."""
     if pic.meta and pic.meta.description:
         return {
@@ -34,7 +34,7 @@ def build_output(doc: DoclingDocument, duration_s: float) -> dict[str, object]:
                 "picture_number": idx,
                 "reference": pic.self_ref,
                 "caption": pic.caption_text(doc=doc) or "",
-                "description": _get_description(pic),
+                "description": get_description(pic),
             }
             for idx, pic in enumerate(doc.pictures, 1)
         ],

@@ -1,6 +1,6 @@
 # Picture Description Pipeline
 
-Describe pictures in PDF documents with a local [IBM Granite Vision](https://huggingface.co/ibm-granite/granite-vision-3.3-2b) model.
+Describe pictures in PDF documents using a local vision language model.
 
 ## Setup
 
@@ -14,8 +14,8 @@ uv run streamlit run streamlit_app.py
 ```
 pipeline/
   __init__.py        # public API re-exports
-  config.py          # constants, converter factory, convert wrapper
-  output.py          # output builder
+  config.py          # converter factory, convert wrapper
+  output.py          # output builder, description extractor
 streamlit_app.py     # Streamlit UI
 tests/
   test_config.py     # config and convert tests

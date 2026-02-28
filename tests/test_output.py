@@ -1,4 +1,4 @@
-"""Tests for the build_output function."""
+"""Tests for the output module (build_output, get_description)."""
 
 import warnings
 
@@ -10,7 +10,7 @@ from docling_core.types.doc.document import (
     PictureMeta,
 )
 
-from pipeline.output import build_output
+from pipeline import build_output, get_description
 
 
 def _make_doc(pictures: list[PictureItem] | None = None) -> DoclingDocument:
@@ -47,9 +47,7 @@ def _make_picture_with_annotation(
     pic = PictureItem(self_ref=f"#/pictures/{index}")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=DeprecationWarning)
-        pic.annotations.append(
-            DescriptionAnnotation(text=text, provenance=provenance)
-        )
+        pic.annotations.append(DescriptionAnnotation(text=text, provenance=provenance))
     return pic
 
 
@@ -83,12 +81,12 @@ def test_picture_entry_structure() -> None:
 
 
 def test_description_fields() -> None:
-    pic = _make_picture(0, text="Describes an image.", created_by="granite-vision")
+    pic = _make_picture(0, text="Describes an image.", created_by="test-model")
     doc = _make_doc([pic])
     result = build_output(doc, 1.0)
     description = result["pictures"][0]["description"]
     assert description["text"] == "Describes an image."
-    assert description["created_by"] == "granite-vision"
+    assert description["created_by"] == "test-model"
 
 
 def test_multiple_pictures() -> None:
@@ -121,13 +119,13 @@ def test_empty_document() -> None:
 
 
 def test_description_from_annotations_fallback() -> None:
-    pic = _make_picture_with_annotation(0, text="A chart.", provenance="granite-vision")
+    pic = _make_picture_with_annotation(0, text="A chart.", provenance="test-model")
     doc = _make_doc([pic])
     result = build_output(doc, 1.0)
     description = result["pictures"][0]["description"]
     assert description is not None
     assert description["text"] == "A chart."
-    assert description["created_by"] == "granite-vision"
+    assert description["created_by"] == "test-model"
 
 
 def test_meta_description_preferred_over_annotations() -> None:
@@ -142,3 +140,40 @@ def test_meta_description_preferred_over_annotations() -> None:
     description = result["pictures"][0]["description"]
     assert description["text"] == "From meta."
     assert description["created_by"] == "meta-model"
+
+
+# --- Direct tests for get_description (public API) ---
+
+
+def test_get_description_from_meta() -> None:
+    pic = _make_picture(0, text="A chart showing growth.", created_by="test-model")
+    result = get_description(pic)
+    assert result is not None
+    assert result["text"] == "A chart showing growth."
+    assert result["created_by"] == "test-model"
+
+
+def test_get_description_from_annotations() -> None:
+    pic = _make_picture_with_annotation(0, text="A diagram.", provenance="vlm")
+    result = get_description(pic)
+    assert result is not None
+    assert result["text"] == "A diagram."
+    assert result["created_by"] == "vlm"
+
+
+def test_get_description_returns_none_when_absent() -> None:
+    pic = _make_picture(0)
+    assert get_description(pic) is None
+
+
+def test_get_description_prefers_meta_over_annotations() -> None:
+    pic = _make_picture(0, text="Meta text.", created_by="meta-model")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        pic.annotations.append(
+            DescriptionAnnotation(text="Annotation text.", provenance="ann-model")
+        )
+    result = get_description(pic)
+    assert result is not None
+    assert result["text"] == "Meta text."
+    assert result["created_by"] == "meta-model"

@@ -1,4 +1,5 @@
 import warnings
+from typing import Literal
 
 from docling_core.types.doc.document import (
     DescriptionAnnotation,
@@ -35,20 +36,43 @@ def get_table_content(table: TableItem, doc: DoclingDocument) -> dict[str, objec
     }
 
 
+def build_element(
+    item: PictureItem | TableItem,
+    doc: DoclingDocument,
+    element_number: int,
+    element_type: Literal["picture", "table"],
+) -> dict[str, object]:
+    """Build a unified element dict for a picture or table."""
+    if element_type == "picture":
+        assert isinstance(item, PictureItem)
+        content: dict[str, object] = {"description": get_description(item)}
+    else:
+        assert isinstance(item, TableItem)
+        content = get_table_content(item, doc)
+    return {
+        "element_number": element_number,
+        "type": element_type,
+        "reference": item.self_ref,
+        "caption": item.caption_text(doc=doc) or "",
+        "content": content,
+    }
+
+
 def build_output(doc: DoclingDocument, duration_s: float) -> dict[str, object]:
     """Build the output dictionary from a converted document."""
+    elements: list[dict[str, object]] = []
+    counter = 1
+    for pic in doc.pictures:
+        elements.append(build_element(pic, doc, counter, "picture"))
+        counter += 1
+    for table in doc.tables:
+        elements.append(build_element(table, doc, counter, "table"))
+        counter += 1
     return {
         "document_info": {
             "num_pictures": len(doc.pictures),
+            "num_tables": len(doc.tables),
             "total_duration_s": duration_s,
         },
-        "pictures": [
-            {
-                "picture_number": idx,
-                "reference": pic.self_ref,
-                "caption": pic.caption_text(doc=doc) or "",
-                "description": get_description(pic),
-            }
-            for idx, pic in enumerate(doc.pictures, 1)
-        ],
+        "elements": elements,
     }

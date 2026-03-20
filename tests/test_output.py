@@ -14,6 +14,7 @@ from docling_core.types.doc.document import (
 )
 
 from pipeline import build_output, get_description, get_table_content
+from pipeline.output import build_element
 
 
 def _make_doc(
@@ -77,84 +78,138 @@ def _make_table(
     )
 
 
+# --- Tests for build_output (unified elements) ---
+
+
 def test_top_level_keys() -> None:
     doc = _make_doc()
     result = build_output(doc, 1.5)
-    assert set(result.keys()) == {"document_info", "pictures"}
+    assert set(result.keys()) == {"document_info", "elements"}
 
 
 def test_document_info_fields() -> None:
-    doc = _make_doc([_make_picture(0)])
+    doc = _make_doc([_make_picture(0)], [_make_table(0)])
     result = build_output(doc, 2.34)
     info = result["document_info"]
     assert isinstance(info, dict)
     assert info["num_pictures"] == 1
+    assert info["num_tables"] == 1
     assert info["total_duration_s"] == 2.34
 
 
-def test_picture_entry_structure() -> None:
+def test_picture_element_structure() -> None:
     pic = _make_picture(0, text="A test description.", created_by="test-model")
     doc = _make_doc([pic])
     result = build_output(doc, 0.5)
-    pictures = result["pictures"]
-    assert isinstance(pictures, list)
-    assert len(pictures) == 1
-    entry = pictures[0]
-    assert entry["picture_number"] == 1
+    elements = result["elements"]
+    assert isinstance(elements, list)
+    assert len(elements) == 1
+    entry = elements[0]
+    assert entry["element_number"] == 1
+    assert entry["type"] == "picture"
     assert entry["reference"] == "#/pictures/0"
     assert entry["caption"] == ""
-    assert isinstance(entry["description"], dict)
+    assert entry["content"]["description"]["text"] == "A test description."
+    assert entry["content"]["description"]["created_by"] == "test-model"
 
 
-def test_description_fields() -> None:
-    pic = _make_picture(0, text="Describes an image.", created_by="test-model")
-    doc = _make_doc([pic])
-    result = build_output(doc, 1.0)
-    description = result["pictures"][0]["description"]
-    assert description["text"] == "Describes an image."
-    assert description["created_by"] == "test-model"
-
-
-def test_multiple_pictures() -> None:
+def test_multiple_pictures_in_elements() -> None:
     pics = [
         _make_picture(0, text="First pic.", created_by="model-a"),
         _make_picture(1, text="Second pic.", created_by="model-b"),
     ]
     doc = _make_doc(pics)
     result = build_output(doc, 3.0)
-    pictures = result["pictures"]
-    assert len(pictures) == 2
-    assert pictures[0]["picture_number"] == 1
-    assert pictures[1]["picture_number"] == 2
-    assert pictures[0]["description"]["text"] == "First pic."
-    assert pictures[1]["description"]["text"] == "Second pic."
+    elements = result["elements"]
+    assert len(elements) == 2
+    assert elements[0]["element_number"] == 1
+    assert elements[0]["content"]["description"]["text"] == "First pic."
+    assert elements[1]["element_number"] == 2
+    assert elements[1]["content"]["description"]["text"] == "Second pic."
 
 
-def test_no_description() -> None:
+def test_table_element_structure() -> None:
+    cells = [
+        TableCell(
+            text="Col",
+            start_row_offset_idx=0,
+            end_row_offset_idx=1,
+            start_col_offset_idx=0,
+            end_col_offset_idx=1,
+            column_header=True,
+        ),
+        TableCell(
+            text="val",
+            start_row_offset_idx=1,
+            end_row_offset_idx=2,
+            start_col_offset_idx=0,
+            end_col_offset_idx=1,
+        ),
+    ]
+    table = _make_table(0, cells=cells, num_rows=2, num_cols=1)
+    doc = _make_doc(tables=[table])
+    result = build_output(doc, 0.5)
+    elements = result["elements"]
+    assert len(elements) == 1
+    entry = elements[0]
+    assert entry["element_number"] == 1
+    assert entry["type"] == "table"
+    assert entry["content"]["data"]["columns"] == ["Col"]
+
+
+def test_mixed_pictures_and_tables() -> None:
+    pics = [
+        _make_picture(0, text="Pic 1.", created_by="model"),
+        _make_picture(1, text="Pic 2.", created_by="model"),
+    ]
+    cells = [
+        TableCell(
+            text="A",
+            start_row_offset_idx=0,
+            end_row_offset_idx=1,
+            start_col_offset_idx=0,
+            end_col_offset_idx=1,
+        ),
+    ]
+    tables = [_make_table(0, cells=cells, num_rows=1, num_cols=1)]
+    doc = _make_doc(pics, tables)
+    result = build_output(doc, 3.0)
+    elements = result["elements"]
+    assert len(elements) == 3
+    assert elements[0]["type"] == "picture"
+    assert elements[0]["element_number"] == 1
+    assert elements[1]["type"] == "picture"
+    assert elements[1]["element_number"] == 2
+    assert elements[2]["type"] == "table"
+    assert elements[2]["element_number"] == 3
+
+
+def test_no_description_in_picture_element() -> None:
     pic = _make_picture(0)
     doc = _make_doc([pic])
     result = build_output(doc, 0.5)
-    assert result["pictures"][0]["description"] is None
+    assert result["elements"][0]["content"]["description"] is None
 
 
 def test_empty_document() -> None:
     doc = _make_doc()
     result = build_output(doc, 0.0)
     assert result["document_info"]["num_pictures"] == 0
-    assert result["pictures"] == []
+    assert result["document_info"]["num_tables"] == 0
+    assert result["elements"] == []
 
 
-def test_description_from_annotations_fallback() -> None:
+def test_description_from_annotations_fallback_in_element() -> None:
     pic = _make_picture_with_annotation(0, text="A chart.", provenance="test-model")
     doc = _make_doc([pic])
     result = build_output(doc, 1.0)
-    description = result["pictures"][0]["description"]
+    description = result["elements"][0]["content"]["description"]
     assert description is not None
     assert description["text"] == "A chart."
     assert description["created_by"] == "test-model"
 
 
-def test_meta_description_preferred_over_annotations() -> None:
+def test_meta_description_preferred_over_annotations_in_element() -> None:
     pic = _make_picture(0, text="From meta.", created_by="meta-model")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=DeprecationWarning)
@@ -163,7 +218,7 @@ def test_meta_description_preferred_over_annotations() -> None:
         )
     doc = _make_doc([pic])
     result = build_output(doc, 1.0)
-    description = result["pictures"][0]["description"]
+    description = result["elements"][0]["content"]["description"]
     assert description["text"] == "From meta."
     assert description["created_by"] == "meta-model"
 
@@ -321,3 +376,48 @@ def test_get_table_content_merged_columns() -> None:
     result = get_table_content(table, doc)
     assert result["data"]["columns"] == ["H1", "H2"]
     assert len(result["data"]["rows"]) == 1
+
+
+# --- Tests for build_element ---
+
+
+def test_build_element_picture() -> None:
+    pic = _make_picture(0, text="A chart.", created_by="test-model")
+    doc = _make_doc([pic])
+    result = build_element(pic, doc, element_number=1, element_type="picture")
+    assert result == {
+        "element_number": 1,
+        "type": "picture",
+        "reference": "#/pictures/0",
+        "caption": "",
+        "content": {"description": {"text": "A chart.", "created_by": "test-model"}},
+    }
+
+
+def test_build_element_table() -> None:
+    cells = [
+        TableCell(
+            text="X",
+            start_row_offset_idx=0,
+            end_row_offset_idx=1,
+            start_col_offset_idx=0,
+            end_col_offset_idx=1,
+            column_header=True,
+        ),
+        TableCell(
+            text="1",
+            start_row_offset_idx=1,
+            end_row_offset_idx=2,
+            start_col_offset_idx=0,
+            end_col_offset_idx=1,
+        ),
+    ]
+    table = _make_table(0, cells=cells, num_rows=2, num_cols=1)
+    doc = _make_doc(tables=[table])
+    result = build_element(table, doc, element_number=2, element_type="table")
+    assert result["element_number"] == 2
+    assert result["type"] == "table"
+    assert result["reference"] == "#/tables/0"
+    assert result["content"]["data"]["columns"] == ["X"]
+    assert result["content"]["data"]["rows"] == [["1"]]
+    assert isinstance(result["content"]["markdown"], str)

@@ -42,20 +42,20 @@ Overrides (`[tool.uv]`):
 
 ## Architecture
 
-- `pipeline/__init__.py` — re-exports public API (`convert`, `create_converter`, `build_output`, `get_description`)
+- `pipeline/__init__.py` — re-exports public API (`convert`, `create_converter`, `build_output`, `get_description`, `get_table_content`)
 - `pipeline/config.py` — `create_converter()` factory, `convert()` wrapper, warning filters for upstream docling/transformers deprecations
-- `pipeline/output.py` — `build_output()` pure function that builds output dict from a `DoclingDocument` and duration; `get_description()` reads from `pic.meta.description` with fallback to `pic.annotations`
+- `pipeline/output.py` — `build_output()` produces a unified `elements` array from pictures and tables via `build_element()`; `get_description()` extracts picture descriptions from `meta` with fallback to `annotations`; `get_table_content()` extracts table markdown and structured column/row data
 - `streamlit_app.py` — UI only; caches the converter via `st.cache_resource`, passes it to `convert()`, handles file upload, download, and in-app picture preview with expanders
 
 Key details:
 - `convert()` accepts an optional `converter` parameter to reuse a cached instance, avoiding model reload on each call
 - `get_description()` falls back to `pic.annotations` because docling appends `DescriptionAnnotation` after `PictureItem` construction, so the `meta` migration validator doesn't run
-- Upload flow: upload PDF, click "Annotate", spinner, metrics (picture count, duration), JSON download, and per-picture preview in expanders (image + description)
-- Output JSON contains `document_info` (count, timing) and a `pictures` array (reference, caption, description)
+- Upload flow: upload PDF, click "Annotate", spinner, metrics (picture count, table count, duration), JSON download, per-picture preview in expanders (image + description), and per-table preview in expanders (image + interactive dataframe)
+- Output JSON contains `document_info` (picture count, table count, timing) and an `elements` array with `type` discriminator (`"picture"` or `"table"`) and type-specific `content`
 
 ## Tests
 
 - `tests/test_config.py` — `create_converter()` factory, `convert()` with and without provided converter
-- `tests/test_output.py` — `build_output()` and `get_description()` with real Docling objects, annotations fallback, meta priority over annotations
+- `tests/test_output.py` — `build_output()`, `build_element()`, `get_description()`, and `get_table_content()` with real Docling objects; covers pictures, tables, mixed documents, annotations fallback, meta priority
 
 All tests import directly from `pipeline` — no Streamlit mocking needed.

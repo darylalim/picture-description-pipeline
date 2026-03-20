@@ -37,6 +37,7 @@ def create_converter() -> DocumentConverter:
     )
     pipeline_options.images_scale = 2.0
     pipeline_options.generate_picture_images = True
+    pipeline_options.generate_table_images = True
 
     return DocumentConverter(
         format_options={

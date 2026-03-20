@@ -1,4 +1,4 @@
-# Picture Description Pipeline
+# Granite Vision Pipeline
 
 Describe pictures in PDF documents using a local vision language model: [granite-vision-3.3-2b](https://huggingface.co/ibm-granite/granite-vision-3.3-2b).
 

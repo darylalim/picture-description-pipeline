@@ -4,6 +4,7 @@ from docling_core.types.doc.document import (
     DescriptionAnnotation,
     DoclingDocument,
     PictureItem,
+    TableItem,
 )
 
 
@@ -20,6 +21,18 @@ def get_description(pic: PictureItem) -> dict[str, str] | None:
             if isinstance(ann, DescriptionAnnotation):
                 return {"created_by": ann.provenance, "text": ann.text}
     return None
+
+
+def get_table_content(table: TableItem, doc: DoclingDocument) -> dict[str, object]:
+    """Extract table content as markdown and structured data."""
+    df = table.export_to_dataframe(doc=doc)
+    return {
+        "markdown": table.export_to_markdown(doc=doc),
+        "data": {
+            "columns": [str(c) for c in df.columns],
+            "rows": df.values.tolist(),
+        },
+    }
 
 
 def build_output(doc: DoclingDocument, duration_s: float) -> dict[str, object]:

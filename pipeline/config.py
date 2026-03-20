@@ -27,7 +27,7 @@ def create_converter() -> DocumentConverter:
     pipeline_options = PdfPipelineOptions()
     pipeline_options.do_picture_description = True
     pipeline_options.picture_description_options = PictureDescriptionVlmOptions(
-        repo_id="Qwen/Qwen2.5-VL-3B-Instruct",
+        repo_id="ibm-granite/granite-vision-3.3-2b",
         prompt="Describe the image in three sentences. Be concise and accurate.",
         generation_config={
             "max_new_tokens": 200,

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Streamlit web app that describes pictures in PDF documents using a local vision language model: [Qwen2.5-VL-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct).
+Streamlit web app that describes pictures in PDF documents using a local vision language model: [granite-vision-3.3-2b](https://huggingface.co/ibm-granite/granite-vision-3.3-2b).
 
 ## Setup
 

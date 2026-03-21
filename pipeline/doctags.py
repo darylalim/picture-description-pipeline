@@ -12,11 +12,13 @@ def render_pdf_pages(pdf_path: str, dpi: int = 144) -> list[Image.Image]:
         dpi: Resolution for rendering. Default 144.
     """
     pdf = pypdfium2.PdfDocument(pdf_path)
-    pages: list[Image.Image] = []
-    for i in range(len(pdf)):
-        page = pdf[i]
-        bitmap = page.render(scale=dpi / 72)
-        pil_image = bitmap.to_pil().convert("RGB")
-        pages.append(pil_image)
-    pdf.close()
-    return pages
+    try:
+        pages: list[Image.Image] = []
+        for i in range(len(pdf)):
+            page = pdf[i]
+            bitmap = page.render(scale=dpi / 72)
+            pil_image = bitmap.to_pil().convert("RGB")
+            pages.append(pil_image)
+        return pages
+    finally:
+        pdf.close()

@@ -1,6 +1,6 @@
 # Granite Vision Pipeline
 
-Describe pictures in PDF documents using a local vision language model: [granite-vision-3.3-2b](https://huggingface.co/ibm-granite/granite-vision-3.3-2b).
+Extract and describe pictures and tables in PDF documents using a local vision language model: [granite-vision-3.3-2b](https://huggingface.co/ibm-granite/granite-vision-3.3-2b).
 
 ## Setup
 
@@ -15,9 +15,9 @@ uv run streamlit run streamlit_app.py
 pipeline/
   __init__.py        # public API re-exports
   config.py          # converter factory, convert wrapper
-  output.py          # output builder, description extractor
+  output.py          # unified element builder, description and table extraction
 streamlit_app.py     # Streamlit UI
 tests/
-  test_config.py     # config and convert tests
-  test_output.py     # output builder tests
+  test_config.py     # converter factory and pipeline option tests
+  test_output.py     # element builder, description, and table content tests
 ```

@@ -1,6 +1,7 @@
 """Tests for the doctags module."""
 
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from docling_core.types.doc.document import DoclingDocument
 from PIL import Image
@@ -72,9 +73,6 @@ def test_export_markdown_returns_string() -> None:
     doc = DoclingDocument(name="test")
     result = export_markdown(doc)
     assert isinstance(result, str)
-
-
-from unittest.mock import MagicMock, patch
 
 
 # --- create_doctags_model tests ---

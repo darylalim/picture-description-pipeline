@@ -2,9 +2,10 @@
 
 from pathlib import Path
 
+from docling_core.types.doc.document import DoclingDocument
 from PIL import Image
 
-from pipeline.doctags import render_pdf_pages
+from pipeline.doctags import export_markdown, parse_doctags, render_pdf_pages
 
 TEST_PDF = str(Path(__file__).parent / "data" / "pdf" / "test_pictures.pdf")
 
@@ -32,11 +33,6 @@ def test_render_pdf_pages_images_are_rgb() -> None:
     pages = render_pdf_pages(TEST_PDF)
     for page in pages:
         assert page.mode == "RGB"
-
-
-from docling_core.types.doc.document import DoclingDocument
-
-from pipeline.doctags import export_markdown, parse_doctags
 
 
 # --- parse_doctags tests ---

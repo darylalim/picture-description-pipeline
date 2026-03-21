@@ -21,24 +21,32 @@ Follows the established pattern: core logic in `pipeline/doctags.py`, UI in `pag
 
 ## Pipeline Module (`pipeline/doctags.py`)
 
+### Imports
+
+Key imports from `docling-core` (not `docling`):
+- `from docling_core.types.doc.document import DocTagsDocument, DoclingDocument`
+
 ### Model Management
 
-- `create_doctags_model(device: str | None = None) -> tuple[AutoModelForVision2Seq, AutoProcessor]`
-  - Loads `ibm-granite/granite-docling-258M` via Transformers
+- `create_doctags_model(device: str | None = None) -> tuple[AutoProcessor, AutoModelForVision2Seq]`
+  - Loads `ibm-granite/granite-docling-258M` via Transformers (`AutoModelForVision2Seq` — same auto-class used for granite-vision in segmentation)
   - Auto-detects device: CUDA if available, else CPU (skip MPS, consistent with segmentation)
-  - Returns `(model, processor)` tuple
+  - Returns `(processor, model)` tuple — processor first, matching `create_granite_model` convention
   - Cached via `st.cache_resource` at the page level
 
 ### Core Inference
 
-- `generate_doctags(image: Image.Image, model: AutoModelForVision2Seq, processor: AutoProcessor, device: str) -> str`
+- `generate_doctags(image: Image.Image, processor: AutoProcessor, model: AutoModelForVision2Seq) -> str`
+  - Infers device from model parameters (no separate `device` arg, matching `segment()` pattern)
   - Constructs chat template with prompt `"Convert this page to docling."`
-  - Runs `model.generate()` with `max_new_tokens=8192`
+  - Runs `model.generate()` with `max_new_tokens=8192` (sufficient for single pages; complex pages may need tuning)
   - Decodes output, strips input tokens, returns raw doctags string
+  - Returns empty string on failure (empty model output)
 
 ### Parsing and Conversion
 
-- `parse_doctags(doctags: str, image: Image.Image) -> DoclingDocument`
+- `parse_doctags(doctags: str, image: Image.Image) -> DoclingDocument | None`
+  - Returns `None` if doctags string is empty or missing `<doctag>` tags
   - Uses `DocTagsDocument.from_doctags_and_image_pairs([doctags], [image])`
   - Converts via `DoclingDocument.load_from_doctags(doctags_doc, document_name="Document")`
   - Returns structured `DoclingDocument`
@@ -64,20 +72,23 @@ Follows the established pattern: core logic in `pipeline/doctags.py`, UI in `pag
 
 - Side-by-side columns: original image (left) | raw doctags in code block + rendered markdown (right)
 - Download buttons for raw doctags (`.txt`) and markdown (`.md`)
+- On parse failure: show raw doctags with `st.warning` that parsing failed
 
 ### PDF Flow
 
+- Progress bar (`st.progress`) with per-page updates during processing
 - Metrics row: page count, total duration
 - Expander per page (first expanded by default), each with side-by-side layout:
   - Left: rendered page image
   - Right: raw doctags in code block + rendered markdown
 - Download buttons for per-page outputs plus combined document download
+- On per-page parse failure: show raw doctags with `st.warning` in that page's expander
 
 ### Data Flow
 
 ```
 Image upload -> generate_doctags() -> raw doctags string
-                                   -> parse_doctags() -> DoclingDocument
+                                   -> parse_doctags() -> DoclingDocument | None
                                                       -> export_markdown()
 
 PDF upload -> render_pdf_pages() -> [Image per page]
@@ -88,16 +99,17 @@ PDF upload -> render_pdf_pages() -> [Image per page]
 
 Unit tests that do not require model weights:
 
-- `render_pdf_pages()` — renders test PDF (`tests/data/pdf/test_pictures.pdf`), verifies page count and image dimensions
+- `render_pdf_pages()` — renders test PDF (`tests/data/pdf/test_pictures.pdf`), verifies returns list of PIL Images with non-zero dimensions
 - `parse_doctags()` — parses sample doctags strings into DoclingDocument, verifies structure
+- `parse_doctags()` — returns `None` for empty string and missing `<doctag>` tags
 - `generate_doctags()` — mocked model inference, verifies prompt construction and output decoding
 - `export_markdown()` — verifies markdown export from a DoclingDocument
 - Edge cases: empty doctags, malformed tags
 
 ## Dependencies
 
-- `pypdfium2` — added as explicit dependency in `pyproject.toml` (already transitive via docling)
-- `docling-core` — already available (transitive via `docling[vlm]`), provides `DocTagsDocument` and `DoclingDocument`
+- `pypdfium2` — added as explicit dependency in `pyproject.toml` (already transitive via docling; made explicit to ensure availability)
+- `docling-core` — already available (transitive via `docling[vlm]`), provides `DocTagsDocument` and `DoclingDocument` from `docling_core.types.doc.document`
 - `transformers` — already a direct dependency, used for model loading
 - `torch` — already a direct dependency, used for inference
 

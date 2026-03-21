@@ -2,7 +2,12 @@
 
 import torch
 
-from pipeline.segmentation import extract_segmentation, prepare_mask, sample_points
+from pipeline.segmentation import (
+    compute_logits_from_mask,
+    extract_segmentation,
+    prepare_mask,
+    sample_points,
+)
 
 
 # --- extract_segmentation tests ---
@@ -117,3 +122,26 @@ def test_sample_points_all_one_mask() -> None:
     # No background -> 5 positive points, 0 negative points
     assert (labels == 1).sum().item() == 5
     assert (labels == 0).sum().item() == 0
+
+
+# --- compute_logits_from_mask tests ---
+
+
+def test_compute_logits_shape() -> None:
+    mask = torch.zeros(100, 80)
+    mask[:50, :40] = 1.0
+    result = compute_logits_from_mask(mask)
+    assert result.shape == (1, 256, 256)
+
+
+def test_compute_logits_shape_small_mask() -> None:
+    mask = torch.zeros(10, 10)
+    result = compute_logits_from_mask(mask)
+    assert result.shape == (1, 256, 256)
+
+
+def test_compute_logits_padding() -> None:
+    # Non-square mask: 200x100 -> scale to 256x128, pad width to 256
+    mask = torch.zeros(200, 100)
+    result = compute_logits_from_mask(mask)
+    assert result.shape == (1, 256, 256)

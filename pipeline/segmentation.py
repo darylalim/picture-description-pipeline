@@ -86,6 +86,33 @@ def _sample_points_from_mask(
     return torch.stack([x, y], dim=1)
 
 
+def compute_logits_from_mask(
+    mask: torch.Tensor,
+    eps: float = 1e-3,
+    longest_side: int = 256,
+) -> torch.Tensor:
+    """Convert binary mask to logits, resize and pad for SAM input.
+
+    Returns tensor of shape (1, longest_side, longest_side).
+    """
+    mask = mask.to(dtype=torch.float32)
+    logits = torch.logit(mask, eps=eps).unsqueeze(0).unsqueeze(0)
+
+    h, w = mask.shape
+    scale = longest_side / float(max(h, w))
+    new_h = int(round(h * scale))
+    new_w = int(round(w * scale))
+
+    logits = F.interpolate(logits, size=(new_h, new_w), mode="bilinear", antialias=True)
+
+    pad_h = longest_side - new_h
+    pad_w = longest_side - new_w
+    logits = F.pad(logits, (0, pad_w, 0, pad_h), mode="constant", value=0.0)
+    logits = logits.squeeze(1)
+
+    return logits
+
+
 def sample_points(
     mask: torch.Tensor,
     num_pos: int = 15,

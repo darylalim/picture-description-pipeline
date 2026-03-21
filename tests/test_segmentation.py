@@ -185,6 +185,7 @@ def test_draw_mask_alpha_varies_with_mask() -> None:
     fg_pixel = result.getpixel((10, 50))
     # Background pixel (x=90) should be untouched
     bg_pixel = result.getpixel((90, 50))
+    assert isinstance(fg_pixel, tuple) and isinstance(bg_pixel, tuple)
     # Foreground red channel should be higher than background red channel
     assert fg_pixel[0] > bg_pixel[0]
     # Foreground should be semi-transparent (not fully opaque red)

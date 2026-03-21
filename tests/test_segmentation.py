@@ -31,6 +31,12 @@ def test_extract_segmentation_no_seg_tags() -> None:
     assert result is None
 
 
+def test_extract_segmentation_malformed_rle() -> None:
+    assert extract_segmentation("<seg>others</seg>") is None
+    assert extract_segmentation("<seg>others *abc</seg>") is None
+    assert extract_segmentation("<seg></seg>") is None
+
+
 def test_extract_segmentation_pads_short_mask() -> None:
     text = "<seg>others *2</seg>"
     result = extract_segmentation(text, patch_h=2, patch_w=2)

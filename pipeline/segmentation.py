@@ -21,9 +21,12 @@ def extract_segmentation(
     match = re.search(r"<seg>(.*?)</seg>", text, re.DOTALL)
     if match is None:
         return None
-    rows = match.group(1).strip().split("\n")
-    tokens = [token.split(" *") for row in rows for token in row.split("| ")]
-    tokens = [x[0].strip() for x in tokens for _ in range(int(x[1]))]
+    try:
+        rows = match.group(1).strip().split("\n")
+        tokens = [token.split(" *") for row in rows for token in row.split("| ")]
+        tokens = [x[0].strip() for x in tokens for _ in range(int(x[1]))]
+    except (IndexError, ValueError):
+        return None
 
     mask = [0 if item == "others" else 1 for item in tokens]
 

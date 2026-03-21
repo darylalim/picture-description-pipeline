@@ -564,6 +564,9 @@ dependencies = [
     { name = "docling", version = "2.35.0", source = { registry = "https://pypi.org/simple" }, extra = ["vlm"], marker = "python_full_version < '3.14' or python_full_version >= '4'" },
     { name = "docling", version = "2.62.0", source = { registry = "https://pypi.org/simple" }, extra = ["vlm"], marker = "python_full_version >= '3.14' and python_full_version < '4'" },
     { name = "streamlit" },
+    { name = "torch" },
+    { name = "transformers", version = "4.42.4", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.14' and platform_machine == 'x86_64' and sys_platform == 'darwin') or (python_full_version >= '4' and platform_machine == 'x86_64' and sys_platform == 'darwin')" },
+    { name = "transformers", version = "4.57.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.14' and python_full_version < '4') or platform_machine != 'x86_64' or sys_platform != 'darwin'" },
 ]
 
 [package.dev-dependencies]
@@ -577,6 +580,8 @@ dev = [
 requires-dist = [
     { name = "docling", extras = ["vlm"] },
     { name = "streamlit" },
+    { name = "torch" },
+    { name = "transformers" },
 ]
 
 [package.metadata.requires-dev]

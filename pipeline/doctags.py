@@ -46,6 +46,39 @@ def export_markdown(doc: DoclingDocument) -> str:
     return doc.export_to_markdown()
 
 
+def generate_doctags(
+    image: Image.Image,
+    processor: AutoProcessor,
+    model: AutoModelForVision2Seq,
+) -> str:
+    """Generate doctags from a document image.
+
+    Infers device from the model. Returns raw doctags string,
+    or empty string if model produces no output.
+    """
+    device = next(model.parameters()).device
+
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "image"},
+                {"type": "text", "text": "Convert this page to docling."},
+            ],
+        },
+    ]
+
+    prompt = processor.apply_chat_template(messages, add_generation_prompt=True)
+    inputs = processor(text=prompt, images=[image], return_tensors="pt").to(device)
+
+    with torch.inference_mode():
+        output = model.generate(**inputs, max_new_tokens=8192)
+
+    trimmed = output[:, inputs["input_ids"].shape[1] :]
+    decoded = processor.batch_decode(trimmed, skip_special_tokens=False)[0].lstrip()
+    return decoded
+
+
 def create_doctags_model(
     device: str | None = None,
 ) -> tuple[AutoProcessor, AutoModelForVision2Seq]:

@@ -283,7 +283,7 @@ def segment(
         },
     ]
 
-    inputs = granite_processor.apply_chat_template(
+    inputs = granite_processor.apply_chat_template(  # type: ignore[operator]
         conversation,
         add_generation_prompt=True,
         tokenize=True,
@@ -294,7 +294,7 @@ def segment(
     with torch.inference_mode():
         output = granite_model.generate(**inputs, max_new_tokens=8192)
 
-    decoded = granite_processor.decode(output[0], skip_special_tokens=True)
+    decoded = granite_processor.decode(output[0], skip_special_tokens=True)  # type: ignore[operator]
 
     flat_mask = extract_segmentation(decoded)
     if flat_mask is None:

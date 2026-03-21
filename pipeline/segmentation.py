@@ -145,7 +145,7 @@ def compute_logits_from_mask(
     new_h = int(round(h * scale))
     new_w = int(round(w * scale))
 
-    logits = F.interpolate(logits, size=(new_h, new_w), mode="bilinear", antialias=True)
+    logits = F.interpolate(logits, size=(new_h, new_w), mode="bilinear")
 
     pad_h = longest_side - new_h
     pad_w = longest_side - new_w

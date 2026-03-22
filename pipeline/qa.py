@@ -35,3 +35,46 @@ def create_qa_model(
     processor = AutoProcessor.from_pretrained(model_path)
     model = AutoModelForVision2Seq.from_pretrained(model_path).to(device)
     return processor, model
+
+
+def generate_qa_response(
+    images: list[Image.Image],
+    question: str,
+    processor: AutoProcessor,
+    model: AutoModelForVision2Seq,
+) -> str:
+    """Answer a question about one or more page images.
+
+    Accepts 1-8 images. Each image is converted to RGB and resized so the
+    longer dimension is at most 768px. All images are passed to the model
+    in a single conversation turn.
+
+    Raises ValueError if images list has 0 or more than 8 items.
+    Returns empty string if the model produces no output.
+    """
+    if not (1 <= len(images) <= 8):
+        raise ValueError(f"Expected 1 to 8 images, got {len(images)}")
+
+    prepared = [resize_for_qa(img.convert("RGB")) for img in images]
+
+    device = next(model.parameters()).device
+
+    content: list[dict] = [{"type": "image", "image": img} for img in prepared]
+    content.append({"type": "text", "text": question})
+
+    conversation = [{"role": "user", "content": content}]
+
+    inputs = processor.apply_chat_template(  # type: ignore[operator]
+        conversation,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt",
+    ).to(device)
+
+    with torch.inference_mode():
+        output = model.generate(**inputs, max_new_tokens=1024)
+
+    trimmed = output[:, inputs["input_ids"].shape[1] :]
+    decoded = processor.decode(trimmed[0], skip_special_tokens=True)  # type: ignore[operator]
+    return decoded

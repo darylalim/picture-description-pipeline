@@ -9,3 +9,5 @@ dist/
 # Model weights
 *.bin
 *.safetensors
+*.gguf
+*.onnx

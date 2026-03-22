@@ -18,7 +18,7 @@
 - Create: `tests/test_qa.py`
 - Create: `pipeline/qa.py`
 
-- [ ] **Step 1: Write failing tests for `resize_for_qa`**
+- [x] **Step 1: Write failing tests for `resize_for_qa`**
 
 ```python
 """Tests for the QA module."""
@@ -68,12 +68,12 @@ def test_resize_custom_max_dim() -> None:
     assert result.size == (512, 384)
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_qa.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'pipeline.qa'`
 
-- [ ] **Step 3: Implement `resize_for_qa`**
+- [x] **Step 3: Implement `resize_for_qa`**
 
 ```python
 """Multipage QA using Granite Vision."""
@@ -94,15 +94,15 @@ def resize_for_qa(image: Image.Image, max_dim: int = 768) -> Image.Image:
     scale = max_dim / longer
     new_w = int(w * scale)
     new_h = int(h * scale)
-    return image.resize((new_w, new_h), Image.LANCZOS)
+    return image.resize((new_w, new_h), Image.Resampling.LANCZOS)
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `uv run pytest tests/test_qa.py -v`
 Expected: All 6 tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/test_qa.py pipeline/qa.py
@@ -117,7 +117,7 @@ git commit -m "feat(qa): add resize_for_qa image resizing helper with tests"
 - Modify: `tests/test_qa.py`
 - Modify: `pipeline/qa.py`
 
-- [ ] **Step 1: Write failing tests for `create_qa_model`**
+- [x] **Step 1: Write failing tests for `create_qa_model`**
 
 Add the following imports to the **top** of `tests/test_qa.py` (alongside existing imports):
 
@@ -162,12 +162,12 @@ def test_create_qa_model_moves_to_device(
     mock_model_cls.from_pretrained.return_value.to.assert_called_once_with("cpu")
 ```
 
-- [ ] **Step 2: Run new tests to verify they fail**
+- [x] **Step 2: Run new tests to verify they fail**
 
 Run: `uv run pytest tests/test_qa.py::test_create_qa_model_loads_correct_model tests/test_qa.py::test_create_qa_model_moves_to_device -v`
 Expected: FAIL with `ImportError` (function doesn't exist yet)
 
-- [ ] **Step 3: Implement `create_qa_model`**
+- [x] **Step 3: Implement `create_qa_model`**
 
 Add imports and function to `pipeline/qa.py`:
 
@@ -192,12 +192,12 @@ def create_qa_model(
     return processor, model
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `uv run pytest tests/test_qa.py -v`
 Expected: All 8 tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/test_qa.py pipeline/qa.py
@@ -212,7 +212,7 @@ git commit -m "feat(qa): add create_qa_model factory with tests"
 - Modify: `tests/test_qa.py`
 - Modify: `pipeline/qa.py`
 
-- [ ] **Step 1: Write failing tests for `generate_qa_response`**
+- [x] **Step 1: Write failing tests for `generate_qa_response`**
 
 Add the following imports to the **top** of `tests/test_qa.py` (alongside existing imports):
 
@@ -338,12 +338,12 @@ def test_generate_qa_response_returns_empty_on_no_new_tokens() -> None:
     assert result == ""
 ```
 
-- [ ] **Step 2: Run new tests to verify they fail**
+- [x] **Step 2: Run new tests to verify they fail**
 
 Run: `uv run pytest tests/test_qa.py::test_generate_qa_response_rejects_empty_images -v`
 Expected: FAIL with `ImportError` (function doesn't exist yet)
 
-- [ ] **Step 3: Implement `generate_qa_response`**
+- [x] **Step 3: Implement `generate_qa_response`**
 
 Add to `pipeline/qa.py`:
 
@@ -391,12 +391,12 @@ def generate_qa_response(
     return decoded
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `uv run pytest tests/test_qa.py -v`
-Expected: All 14 tests PASS
+Expected: All 13 tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/test_qa.py pipeline/qa.py
@@ -410,7 +410,7 @@ git commit -m "feat(qa): add generate_qa_response with multi-image prompt and te
 **Files:**
 - Modify: `pipeline/__init__.py`
 
-- [ ] **Step 1: Add QA imports and exports**
+- [x] **Step 1: Add QA imports and exports**
 
 Add to `pipeline/__init__.py`:
 
@@ -426,17 +426,17 @@ And add to `__all__`:
 "resize_for_qa",
 ```
 
-- [ ] **Step 2: Verify imports work**
+- [x] **Step 2: Verify imports work**
 
 Run: `uv run python -c "from pipeline import create_qa_model, generate_qa_response, resize_for_qa; print('OK')"`
 Expected: `OK`
 
-- [ ] **Step 3: Run all tests to verify nothing is broken**
+- [x] **Step 3: Run all tests to verify nothing is broken**
 
 Run: `uv run pytest -v`
 Expected: All tests PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add pipeline/__init__.py
@@ -450,7 +450,7 @@ git commit -m "feat(qa): export QA public API from pipeline"
 **Files:**
 - Create: `pages/qa.py`
 
-- [ ] **Step 1: Create the QA page**
+- [x] **Step 1: Create the QA page**
 
 ```python
 import tempfile
@@ -547,7 +547,7 @@ if st.button("Answer", type="primary", disabled=not has_input):
             Path(tmp_path).unlink(missing_ok=True)
 ```
 
-- [ ] **Step 2: Verify page loads without errors**
+- [x] **Step 2: Verify page loads without errors**
 
 Run: `uv run python -c "import pages.qa; print('OK')"`
 Note: This will fail because of `st.cache_resource` outside a Streamlit context — that's expected. The important check is that the import path resolves. Alternatively, verify with lint:
@@ -555,12 +555,12 @@ Note: This will fail because of `st.cache_resource` outside a Streamlit context 
 Run: `uv run ruff check pages/qa.py`
 Expected: No errors (or only Streamlit-specific warnings)
 
-- [ ] **Step 3: Run all tests to verify nothing is broken**
+- [x] **Step 3: Run all tests to verify nothing is broken**
 
 Run: `uv run pytest -v`
 Expected: All tests PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add pages/qa.py
@@ -574,7 +574,7 @@ git commit -m "feat(qa): add multipage QA Streamlit page"
 **Files:**
 - Modify: `CLAUDE.md`
 
-- [ ] **Step 1: Update Project Overview**
+- [x] **Step 1: Update Project Overview**
 
 Add item 4 to the capabilities list:
 
@@ -582,7 +582,7 @@ Add item 4 to the capabilities list:
 4. **Multipage QA** — answer questions across up to 8 document pages using [granite-vision-3.3-2b](https://huggingface.co/ibm-granite/granite-vision-3.3-2b) with images resized to 768px max dimension
 ```
 
-- [ ] **Step 2: Update Architecture > Pipeline section**
+- [x] **Step 2: Update Architecture > Pipeline section**
 
 Add entry for `pipeline/qa.py`:
 
@@ -596,7 +596,7 @@ Update `pipeline/__init__.py` entry to include QA exports:
 - `pipeline/__init__.py` — re-exports public API (`convert`, `create_converter`, `build_output`, `get_description`, `get_table_content`, `create_granite_model`, `create_sam_model`, `segment`, `draw_mask`, `create_doctags_model`, `generate_doctags`, `parse_doctags`, `export_markdown`, `render_pdf_pages`, `create_qa_model`, `resize_for_qa`, `generate_qa_response`)
 ```
 
-- [ ] **Step 3: Update Architecture > UI section**
+- [x] **Step 3: Update Architecture > UI section**
 
 Add entry:
 
@@ -604,7 +604,7 @@ Add entry:
 - `pages/qa.py` — multipage QA page; PDF/image upload, page selection, question input, answer display with thumbnails
 ```
 
-- [ ] **Step 4: Update Key Details section**
+- [x] **Step 4: Update Key Details section**
 
 Add:
 
@@ -614,7 +614,7 @@ Add:
 - PDF page count is obtained via `pypdfium2.PdfDocument` without rendering; only selected pages are rendered
 ```
 
-- [ ] **Step 5: Update Tests section**
+- [x] **Step 5: Update Tests section**
 
 Add:
 
@@ -622,12 +622,12 @@ Add:
 - `tests/test_qa.py` — `resize_for_qa()` dimension and aspect ratio tests, `create_qa_model()` with mocked model, `generate_qa_response()` prompt structure, validation, and decode behavior; no model weights required
 ```
 
-- [ ] **Step 6: Run lint and format**
+- [x] **Step 6: Run lint and format**
 
 Run: `uv run ruff check . && uv run ruff format .`
 Expected: No errors
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add CLAUDE.md
@@ -638,17 +638,17 @@ git commit -m "docs: update CLAUDE.md with multipage QA feature"
 
 ### Task 7: Final verification
 
-- [ ] **Step 1: Run full test suite**
+- [x] **Step 1: Run full test suite**
 
 Run: `uv run pytest -v`
 Expected: All tests PASS (including all new `test_qa.py` tests)
 
-- [ ] **Step 2: Run lint and type checks**
+- [x] **Step 2: Run lint and type checks**
 
 Run: `uv run ruff check . && uv run ruff format --check .`
 Expected: Clean
 
-- [ ] **Step 3: Review all changes**
+- [x] **Step 3: Review all changes**
 
 Run: `git log --oneline -6`
 Expected: 6 commits for tasks 1-6

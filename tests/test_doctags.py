@@ -43,6 +43,13 @@ def test_render_pdf_pages_images_are_rgb() -> None:
         assert page.mode == "RGB"
 
 
+def test_render_pdf_pages_with_page_indices() -> None:
+    all_pages = render_pdf_pages(TEST_PDF)
+    first_page = render_pdf_pages(TEST_PDF, page_indices=[0])
+    assert len(first_page) == 1
+    assert first_page[0].size == all_pages[0].size
+
+
 # --- parse_doctags tests ---
 
 

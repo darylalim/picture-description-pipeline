@@ -36,6 +36,12 @@ def test_exact_max_dim_unchanged() -> None:
     assert result.size == (768, 500)
 
 
+def test_resize_square_at_max_dim_unchanged() -> None:
+    image = Image.new("RGB", (768, 768))
+    result = resize_for_qa(image)
+    assert result.size == (768, 768)
+
+
 def test_resize_preserves_aspect_ratio() -> None:
     image = Image.new("RGB", (1600, 1200))
     result = resize_for_qa(image)
@@ -112,7 +118,9 @@ def test_generate_qa_response_prompt_structure() -> None:
     mock_processor.decode.return_value = "The answer is 42."
 
     images = [Image.new("RGB", (100, 100)) for _ in range(3)]
-    result = generate_qa_response(images, "What is the answer?", mock_processor, mock_model)
+    result = generate_qa_response(
+        images, "What is the answer?", mock_processor, mock_model
+    )
 
     # Verify conversation structure
     call_args = mock_processor.apply_chat_template.call_args

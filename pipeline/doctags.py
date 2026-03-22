@@ -7,17 +7,23 @@ from docling_core.types.doc.document import DocTagsDocument, DoclingDocument
 from transformers import AutoModelForVision2Seq, AutoProcessor
 
 
-def render_pdf_pages(pdf_path: str, dpi: int = 144) -> list[Image.Image]:
-    """Render each page of a PDF to a PIL RGB Image.
+def render_pdf_pages(
+    pdf_path: str,
+    dpi: int = 144,
+    page_indices: list[int] | None = None,
+) -> list[Image.Image]:
+    """Render pages of a PDF to PIL RGB Images.
 
     Args:
         pdf_path: Path to the PDF file.
         dpi: Resolution for rendering. Default 144.
+        page_indices: Zero-based page indices to render. Default None renders all.
     """
     pdf = pypdfium2.PdfDocument(pdf_path)
     try:
+        indices = page_indices if page_indices is not None else list(range(len(pdf)))
         pages: list[Image.Image] = []
-        for i in range(len(pdf)):
+        for i in indices:
             page = pdf[i]
             bitmap = page.render(scale=dpi / 72)
             pil_image = bitmap.to_pil().convert("RGB")

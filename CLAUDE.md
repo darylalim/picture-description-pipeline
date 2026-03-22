@@ -56,7 +56,7 @@ Overrides (`[tool.uv]`):
 - `pipeline/config.py` — `create_converter()` factory, `convert()` wrapper, warning filters for upstream docling/transformers deprecations
 - `pipeline/output.py` — `build_output()` produces a unified `elements` array from pictures and tables; `get_description()` extracts picture descriptions from `meta` with fallback to `annotations`; `get_table_content()` extracts table markdown and structured column/row data
 - `pipeline/segmentation.py` — `segment()` runs Granite Vision referring segmentation + SAM refinement; `draw_mask()` for overlay visualization; `create_granite_model()` and `create_sam_model()` factories; internal helpers for RLE parsing, mask processing, point sampling, and logit computation
-- `pipeline/doctags.py` — `create_doctags_model()` factory, `generate_doctags()` inference, `parse_doctags()` conversion to DoclingDocument, `export_markdown()` wrapper, `render_pdf_pages()` PDF-to-image rendering
+- `pipeline/doctags.py` — `create_doctags_model()` factory, `generate_doctags()` inference, `parse_doctags()` conversion to DoclingDocument, `export_markdown()` wrapper, `render_pdf_pages()` PDF-to-image rendering with optional `page_indices` for selective rendering
 - `pipeline/qa.py` — `create_qa_model()` factory, `resize_for_qa()` image resizing, `generate_qa_response()` multi-image QA inference
 
 ### UI
@@ -78,7 +78,8 @@ Overrides (`[tool.uv]`):
 - All models are cached via `st.cache_resource` at the page level
 - Multipage QA loads its own Granite Vision instance (independent from segmentation), uses the segmentation-style prompt approach (inline images in conversation dict + `apply_chat_template` with `tokenize=True`)
 - QA images are resized so the longer dimension is 768px to stay within GPU memory limits for up to 8 pages
-- PDF page count is obtained via `pypdfium2.PdfDocument` without rendering; only selected pages are rendered
+- PDF page count is obtained via `pypdfium2.PdfDocument` without rendering; only selected pages are rendered via `render_pdf_pages(page_indices=...)`
+- QA page validates uploads: rejects mixed PDF + image uploads and multiple PDFs
 
 ## Tests
 

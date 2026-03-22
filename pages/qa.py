@@ -26,13 +26,21 @@ page_images: list[Image.Image] = []
 tmp_path: str | None = None
 is_pdf = False
 selected: list[int] = []
+valid_upload = True
 
 if uploaded_files:
-    is_pdf = len(uploaded_files) == 1 and uploaded_files[0].name.lower().endswith(".pdf")
+    pdf_files = [f for f in uploaded_files if f.name.lower().endswith(".pdf")]
 
-    if is_pdf:
+    if pdf_files and len(uploaded_files) > len(pdf_files):
+        st.error("Please upload either a single PDF or image files, not both.")
+        valid_upload = False
+    elif len(pdf_files) > 1:
+        st.error("Please upload only one PDF at a time.")
+        valid_upload = False
+    elif len(pdf_files) == 1:
+        is_pdf = True
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-            tmp_file.write(uploaded_files[0].read())
+            tmp_file.write(pdf_files[0].read())
             tmp_path = tmp_file.name
 
         pdf = pypdfium2.PdfDocument(tmp_path)
@@ -53,8 +61,8 @@ if uploaded_files:
 
 question = st.text_input("Question", placeholder="e.g., What is shown on these pages?")
 
-has_input = bool(uploaded_files) and bool(question)
-if uploaded_files and len(uploaded_files) == 1 and uploaded_files[0].name.lower().endswith(".pdf"):
+has_input = valid_upload and bool(uploaded_files) and bool(question)
+if is_pdf:
     has_input = has_input and bool(selected)
 
 if st.button("Answer", type="primary", disabled=not has_input):
@@ -65,8 +73,9 @@ if st.button("Answer", type="primary", disabled=not has_input):
         if is_pdf:
             assert tmp_path is not None
             with st.spinner("Rendering selected pages..."):
-                all_pages = render_pdf_pages(tmp_path)
-                page_images = [all_pages[i - 1] for i in selected]
+                page_images = render_pdf_pages(
+                    tmp_path, page_indices=[i - 1 for i in selected]
+                )
         else:
             page_images = [Image.open(f).convert("RGB") for f in uploaded_files]
 
@@ -86,6 +95,8 @@ if st.button("Answer", type="primary", disabled=not has_input):
                 st.markdown(answer)
 
             st.metric("Duration (s)", f"{duration_s:.2f}")
+
+        st.caption("Answers are limited to ~1024 tokens and may be truncated.")
 
     finally:
         if tmp_path is not None:

@@ -16,4 +16,4 @@ def resize_for_qa(image: Image.Image, max_dim: int = 768) -> Image.Image:
     scale = max_dim / longer
     new_w = int(w * scale)
     new_h = int(h * scale)
-    return image.resize((new_w, new_h), Image.LANCZOS)
+    return image.resize((new_w, new_h), Image.Resampling.LANCZOS)
